@@ -6,15 +6,18 @@ import '../../models/player.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/game_provider.dart';
 import '../games/game_screen.dart';
+import '../../widgets/common_widgets.dart';
 
 class GameSetupScreen extends StatefulWidget {
   final GameMode mode;
   final Function(GameType) onGameSelected;
+  final GameType? preselectedGame;
 
   const GameSetupScreen({
     super.key,
     required this.mode,
     required this.onGameSelected,
+    this.preselectedGame,
   });
 
   @override
@@ -29,6 +32,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   int _selectedColorIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.preselectedGame != null) {
+      _selectedGame = widget.preselectedGame;
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
@@ -36,27 +47,30 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.mode == GameMode.local ? 'Local Game' : 'Online Game'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(
+              widget.mode == GameMode.local ? 'Local Game' : 'Online Game'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_selectedGame == null) ...[
-              _buildGameSelection(),
-            ] else if (_players.isEmpty) ...[
-              _buildPlayerSetup(),
-            ] else ...[
-              _buildPlayersList(),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_selectedGame == null) ...[
+                _buildGameSelection(),
+              ] else ...[
+                _buildPlayerSetup(),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -66,65 +80,122 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Select a Game',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          style: TextStyle(
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.sm),
+        const Text(
+          'Choose the party game you want to play',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         ...GameType.values.map((type) => _buildGameOption(type)),
       ],
     );
   }
 
+  Color _getGameColor(GameType type) {
+    switch (type) {
+      case GameType.truthOrDare:
+        return AppColors.success;
+      case GameType.wouldYouRather:
+        return AppColors.secondary;
+      case GameType.neverHaveIEver:
+        return AppColors.primary;
+      case GameType.quickFireTrivia:
+        return AppColors.tertiary;
+    }
+  }
+
   Widget _buildGameOption(GameType type) {
     final isSelected = _selectedGame == type;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedGame = type),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.2) : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.surfaceLight,
-            width: 2,
+    final color = _getGameColor(type);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedGame = type),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: [
+                      color.withValues(alpha: 0.2),
+                      color.withValues(alpha: 0.1)
+                    ],
+                  )
+                : null,
+            color: isSelected ? null : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(
+              color: isSelected ? color : AppColors.surfaceLight,
+              width: 2,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ]
+                : null,
           ),
-        ),
-        child: Row(
-          children: [
-            Text(
-              type.icon,
-              style: const TextStyle(fontSize: 40),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    type.displayName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Center(
+                  child: Text(
+                    type.icon,
+                    style: const TextStyle(fontSize: 32),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    type.description,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle, color: AppColors.primary),
-          ],
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      type.displayName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      type.description,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 20),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -136,33 +207,87 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       children: [
         Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => setState(() => _selectedGame = null),
+            GestureDetector(
+              onTap: () => setState(() => _selectedGame = null),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              ),
             ),
-            Text(
+            const SizedBox(width: AppSpacing.md),
+            const Text(
               'Add Players',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: TextStyle(
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 24),
-        Text(
-          'Player ${_players.length + 1}',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            hintText: 'Enter player name',
+        const SizedBox(height: AppSpacing.lg),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline,
+                  color: AppColors.primary, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Player ${_players.length + 1} - Min 4 players required',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
-        const Text('Select Avatar'),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.lg),
+        const Text(
+          'Player Name',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: _nameController,
+          decoration: InputDecoration(
+            hintText: 'Enter player name',
+            prefixIcon:
+                const Icon(Icons.person_outline, color: AppColors.textMuted),
+            filled: true,
+            fillColor: AppColors.surfaceLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onSubmitted: (_) => _addPlayer(),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const Text(
+          'Select Avatar',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 60,
           child: ListView.builder(
@@ -172,16 +297,23 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               final isSelected = _selectedAvatarIndex == index;
               return GestureDetector(
                 onTap: () => setState(() => _selectedAvatarIndex = index),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   width: 56,
                   height: 56,
-                  margin: const EdgeInsets.only(right: 12),
+                  margin: const EdgeInsets.only(right: AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected
-                        ? Border.all(color: AppColors.primary, width: 2)
-                        : null,
+                    color: isSelected
+                        ? AvatarPresets.colors[_selectedColorIndex]
+                            .withValues(alpha: 0.2)
+                        : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                      color: isSelected
+                          ? AvatarPresets.colors[_selectedColorIndex]
+                          : Colors.transparent,
+                      width: 2,
+                    ),
                   ),
                   child: Center(
                     child: Text(
@@ -194,48 +326,79 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             },
           ),
         ),
-        const SizedBox(height: 24),
-        const Text('Select Color'),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 50,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: AvatarPresets.colors.length,
-            itemBuilder: (context, index) {
-              final isSelected = _selectedColorIndex == index;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedColorIndex = index),
-                child: Container(
-                  width: 46,
-                  height: 46,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: AvatarPresets.colors[index],
-                    borderRadius: BorderRadius.circular(23),
-                    border: isSelected
-                        ? Border.all(color: Colors.white, width: 3)
-                        : null,
+        const SizedBox(height: AppSpacing.lg),
+        const Text(
+          'Select Color',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: List.generate(AvatarPresets.colors.length, (index) {
+            final isSelected = _selectedColorIndex == index;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedColorIndex = index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: AvatarPresets.colors[index],
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? Colors.white : Colors.transparent,
+                    width: 3,
                   ),
-                  child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white)
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AvatarPresets.colors[index]
+                                .withValues(alpha: 0.5),
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                          ),
+                        ]
                       : null,
                 ),
-              );
-            },
-          ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white, size: 20)
+                    : null,
+              ),
+            );
+          }),
         ),
-        const SizedBox(height: 32),
-        ElevatedButton(
+        const SizedBox(height: AppSpacing.xl),
+        NeonButton(
+          label: _players.isEmpty ? 'Add First Player' : 'Add Player',
+          icon: Icons.person_add_rounded,
           onPressed: _addPlayer,
-          child: const Text('Add Player'),
+          fullWidth: true,
         ),
-        const SizedBox(height: 16),
-        if (_players.length >= 4)
-          TextButton(
-            onPressed: _startGame,
-            child: Text('Start with ${_players.length} players'),
-          ),
+        const SizedBox(height: AppSpacing.md),
+        if (_players.isNotEmpty) ...[
+          if (_players.length >= 4)
+            NeonButton(
+              label: 'Start Game (${_players.length} players)',
+              icon: Icons.play_arrow_rounded,
+              onPressed: _startGame,
+              fullWidth: true,
+              gradient: AppColors.secondaryGradient,
+            ),
+          if (_players.length < 8)
+            OutlinedNeonButton(
+              label: 'Add More Players',
+              icon: Icons.person_add_rounded,
+              onPressed: () {
+                _nameController.clear();
+                setState(() {});
+              },
+              fullWidth: true,
+            ),
+        ],
       ],
     );
   }
@@ -243,7 +406,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   void _addPlayer() {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a name')),
+        SnackBar(
+          content: const Text('Please enter a name'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
       );
       return;
     }
@@ -267,68 +437,151 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       children: [
         Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => setState(() => _players.clear()),
+            GestureDetector(
+              onTap: () => setState(() => _players.clear()),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              ),
             ),
-            Text(
-              'Players (${_players.length})',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Players (${_players.length})',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    _players.length >= 4
+                        ? 'Ready to play!'
+                        : 'Add ${4 - _players.length} more players',
+                    style: TextStyle(
+                      color: _players.length >= 4
+                          ? AppColors.success
+                          : AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.lg),
         ...List.generate(_players.length, (index) {
           final player = _players[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: AvatarPresets.colors[player.colorIndex],
-                  child: Text(
-                    AvatarPresets.faces[player.avatarIndex],
-                    style: const TextStyle(fontSize: 20),
-                  ),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: AppColors.surfaceLight,
+                  width: 1,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    player.name,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AvatarPresets.colors[player.colorIndex],
+                      boxShadow: [
+                        BoxShadow(
+                          color: AvatarPresets.colors[player.colorIndex]
+                              .withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        AvatarPresets.faces[player.avatarIndex],
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
                   ),
-                ),
-                if (index > 0)
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: AppColors.error),
-                    onPressed: () => setState(() => _players.removeAt(index)),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      player.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      'P${index + 1}',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  if (index > 0)
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: const Icon(
+                          Icons.remove_circle_outline,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                      ),
+                      onPressed: () => setState(() => _players.removeAt(index)),
+                    ),
+                ],
+              ),
             ),
           );
         }),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         if (_players.length < 8)
-          OutlinedButton.icon(
-            onPressed: () => setState(() => _players.clear()),
-            icon: const Icon(Icons.add),
-            label: const Text('Add More Players'),
+          OutlinedNeonButton(
+            label: 'Add More Players',
+            icon: Icons.person_add_rounded,
+            onPressed: () => setState(() {}),
+            fullWidth: true,
           ),
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: _players.length >= 4 ? _startGame : null,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+        if (_players.length >= 4)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.md),
+            child: NeonButton(
+              label: 'Start Game',
+              icon: Icons.play_arrow_rounded,
+              onPressed: _startGame,
+              fullWidth: true,
+            ),
           ),
-          child: const Text('Start Game'),
-        ),
       ],
     );
   }
