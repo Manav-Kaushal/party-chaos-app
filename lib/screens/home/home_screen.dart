@@ -23,10 +23,8 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeader(context),
-                const SizedBox(height: AppSpacing.xxl),
-                _buildActionButtons(context),
-                const SizedBox(height: AppSpacing.xxl),
-                _buildQuickPlay(context),
+                const SizedBox(height: AppSpacing.xl),
+                _buildHeroSection(context),
                 const SizedBox(height: AppSpacing.xl),
                 _buildGamesSection(context),
                 const SizedBox(height: AppSpacing.xl),
@@ -63,38 +61,52 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                      border: Border.all(
-                        color: AppColors.secondary.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.local_fire_department,
-                          color: AppColors.secondary,
-                          size: 16,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'Chaos Level: Maximum',
-                          style: TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                  Consumer<PlayerProvider>(
+                    builder: (context, playerProvider, _) {
+                      final player = playerProvider.currentPlayer;
+                      return Row(
+                        children: [
+                          Text(
+                            'Hey ${player?.name ?? 'there'}! 👋',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.secondaryGradient,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.full),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.local_fire_department,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${playerProvider.leaderboard.length} playing',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -103,13 +115,45 @@ class HomeScreen extends StatelessWidget {
               builder: (context, playerProvider, _) {
                 final player = playerProvider.currentPlayer;
                 if (player == null) return const SizedBox.shrink();
-                return PlayerAvatar(
-                  player: player,
-                  size: 64,
-                  showGlow: true,
-                  onTap: () {
-                    DefaultTabController.of(context).animateTo(2);
-                  },
+                return Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        player.avatar.color,
+                        player.avatar.color.withValues(alpha: 0.7),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: player.avatar.color.withValues(alpha: 0.5),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      DefaultTabController.of(context).animateTo(2);
+                    },
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          AvatarPresets.faces[player.avatar.index],
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
@@ -119,57 +163,28 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
-    return Column(
-      children: [
-        NeonButton(
-          label: 'Quick Play',
-          icon: Icons.bolt_rounded,
-          fullWidth: true,
-          height: 64,
-          onPressed: () => _showGameModeDialog(context),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: SecondaryNeonButton(
-                label: 'Join Friends',
-                icon: Icons.group_add_rounded,
-                onPressed: () => _navigateToSetup(context, GameMode.online),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: AccentNeonButton(
-                label: 'Random Game',
-                icon: Icons.shuffle_rounded,
-                onPressed: () {
-                  final randomType = GameType.values[
-                      DateTime.now().millisecondsSinceEpoch %
-                          GameType.values.length];
-                  _navigateToSetup(context, GameMode.local,
-                      gameType: randomType);
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickPlay(BuildContext context) {
+  Widget _buildHeroSection(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.3),
+            AppColors.secondary.withValues(alpha: 0.2),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: AppColors.primary.withValues(alpha: 0.2),
+            blurRadius: 30,
+            spreadRadius: 5,
           ),
         ],
       ),
@@ -179,15 +194,22 @@ class HomeScreen extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.5),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.bolt_rounded,
                   color: Colors.white,
-                  size: 28,
+                  size: 32,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -196,15 +218,15 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Quick Play',
+                      "Let's Play!",
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
                     Text(
-                      'Jump right into the chaos!',
+                      'Pick your vibe and start the party',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
@@ -215,34 +237,47 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _showGameModeDialog(context,
-                  preselectedGame: _getRandomGameType()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+          const SizedBox(height: AppSpacing.xl),
+          Row(
+            children: [
+              Expanded(
+                child: _HeroButton(
+                  icon: Icons.bolt_rounded,
+                  label: 'Quick Play',
+                  gradient: AppColors.primaryGradient,
+                  onTap: () => _showGameModeDialog(context,
+                      preselectedGame: _getRandomGameType()),
                 ),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.play_arrow_rounded),
-                  SizedBox(width: 8),
-                  Text(
-                    'Start Playing',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _HeroButton(
+                  icon: Icons.shuffle_rounded,
+                  label: 'Random',
+                  gradient: AppColors.secondaryGradient,
+                  onTap: () {
+                    final randomType = GameType.values[
+                        DateTime.now().millisecondsSinceEpoch %
+                            GameType.values.length];
+                    _showGameModeDialog(context, preselectedGame: randomType);
+                  },
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: _HeroButton(
+              icon: Icons.group_add_rounded,
+              label: 'Join Friends',
+              gradient: const LinearGradient(
+                colors: [AppColors.accent, Color(0xFF00FFE5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              onTap: () => _navigateToSetup(context, GameMode.online),
+              small: true,
             ),
           ),
         ],
@@ -516,6 +551,103 @@ class _GameModeOption extends StatelessWidget {
               size: 20,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final LinearGradient gradient;
+  final VoidCallback onTap;
+  final bool small;
+
+  const _HeroButton({
+    required this.icon,
+    required this.label,
+    required this.gradient,
+    required this.onTap,
+    this.small = false,
+  });
+
+  @override
+  State<_HeroButton> createState() => _HeroButtonState();
+}
+
+class _HeroButtonState extends State<_HeroButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: child,
+          );
+        },
+        child: Container(
+          height: widget.small ? 48 : 56,
+          decoration: BoxDecoration(
+            gradient: widget.gradient,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: [
+              BoxShadow(
+                color: widget.gradient.colors.first.withValues(alpha: 0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                color: Colors.white,
+                size: widget.small ? 20 : 24,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: widget.small ? 14 : 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
