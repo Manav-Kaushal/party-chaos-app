@@ -803,9 +803,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       ),
                     ),
                   ),
-                  if (index > 0 && _players.length > 2)
-                    IconButton(
-                      icon: Container(
+                  if (index > 0)
+                    GestureDetector(
+                      onTap: () => setState(() => _players.removeAt(index)),
+                      child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
@@ -817,7 +818,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                           size: 20,
                         ),
                       ),
-                      onPressed: () => setState(() => _players.removeAt(index)),
                     ),
                 ],
               ),
