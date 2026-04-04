@@ -8,22 +8,22 @@ import '../data/trivia_questions.dart';
 class GameProvider extends ChangeNotifier {
   GameSession? _currentSession;
   final Random _random = Random();
-  
+
   // Truth or Dare specific
   int _truthIndex = 0;
   int _dareIndex = 0;
   List<String> _truths = [];
   List<String> _dares = [];
-  
+
   // Would You Rather specific
   int _wyrIndex = 0;
   List<Map<String, String>> _wyrQuestions = [];
-  
+
   // Never Have I Ever specific
   int _nhieIndex = 0;
   List<String> _nhieStatements = [];
   Map<int, bool> _nhiePlayerChoices = {};
-  
+
   // Trivia specific
   int _triviaIndex = 0;
   List<TriviaQuestion> _triviaQuestions = [];
@@ -41,13 +41,16 @@ class GameProvider extends ChangeNotifier {
       case GameType.truthOrDare:
         return '';
       case GameType.wouldYouRather:
-        if (_wyrQuestions.isEmpty || _wyrIndex >= _wyrQuestions.length) return '';
+        if (_wyrQuestions.isEmpty || _wyrIndex >= _wyrQuestions.length)
+          return '';
         return _wyrQuestions[_wyrIndex]['question']!;
       case GameType.neverHaveIEver:
-        if (_nhieStatements.isEmpty || _nhieIndex >= _nhieStatements.length) return '';
+        if (_nhieStatements.isEmpty || _nhieIndex >= _nhieStatements.length)
+          return '';
         return _nhieStatements[_nhieIndex];
       case GameType.quickFireTrivia:
-        if (_triviaQuestions.isEmpty || _triviaIndex >= _triviaQuestions.length) return '';
+        if (_triviaQuestions.isEmpty || _triviaIndex >= _triviaQuestions.length)
+          return '';
         return _triviaQuestions[_triviaIndex].question;
       default:
         return '';
@@ -59,18 +62,26 @@ class GameProvider extends ChangeNotifier {
       case GameType.truthOrDare:
         return ['Truth', 'Dare'];
       case GameType.wouldYouRather:
-        if (_wyrQuestions.isEmpty || _wyrIndex >= _wyrQuestions.length) return ['', ''];
-        return [_wyrQuestions[_wyrIndex]['option1']!, _wyrQuestions[_wyrIndex]['option2']!];
+        if (_wyrQuestions.isEmpty || _wyrIndex >= _wyrQuestions.length)
+          return ['', ''];
+        return [
+          _wyrQuestions[_wyrIndex]['option1']!,
+          _wyrQuestions[_wyrIndex]['option2']!
+        ];
       case GameType.quickFireTrivia:
-        if (_triviaQuestions.isEmpty || _triviaIndex >= _triviaQuestions.length) return [];
+        if (_triviaQuestions.isEmpty || _triviaIndex >= _triviaQuestions.length)
+          return [];
         return _triviaQuestions[_triviaIndex].options;
       default:
         return [];
     }
   }
 
-  String get currentTruth => _truths.isNotEmpty && _truthIndex < _truths.length ? _truths[_truthIndex] : '';
-  String get currentDare => _dares.isNotEmpty && _dareIndex < _dares.length ? _dares[_dareIndex] : '';
+  String get currentTruth => _truths.isNotEmpty && _truthIndex < _truths.length
+      ? _truths[_truthIndex]
+      : '';
+  String get currentDare =>
+      _dares.isNotEmpty && _dareIndex < _dares.length ? _dares[_dareIndex] : '';
 
   TriviaQuestion? get currentTriviaQuestion =>
       _triviaQuestions.isNotEmpty && _triviaIndex < _triviaQuestions.length
@@ -108,11 +119,13 @@ class GameProvider extends ChangeNotifier {
         _dareIndex = 0;
         break;
       case GameType.wouldYouRather:
-        _wyrQuestions = List.from(WouldYouRatherData.questions)..shuffle(_random);
+        _wyrQuestions = List.from(WouldYouRatherData.questions)
+          ..shuffle(_random);
         _wyrIndex = 0;
         break;
       case GameType.neverHaveIEver:
-        _nhieStatements = List.from(NeverHaveIEverData.statements)..shuffle(_random);
+        _nhieStatements = List.from(NeverHaveIEverData.statements)
+          ..shuffle(_random);
         _nhieIndex = 0;
         _nhiePlayerChoices = {};
         break;
@@ -128,17 +141,18 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  void nextPlayer() {
+  void nextPlayer({bool incrementRound = true}) {
     if (_currentSession == null) return;
 
-    final nextIndex = (_currentSession!.currentPlayerIndex + 1) % _currentSession!.players.length;
+    final nextIndex = (_currentSession!.currentPlayerIndex + 1) %
+        _currentSession!.players.length;
     int nextRound = _currentSession!.round;
 
-    if (nextIndex == 0) {
+    if (incrementRound && nextIndex == 0) {
       nextRound++;
     }
 
-    if (nextRound > _currentSession!.totalRounds) {
+    if (incrementRound && nextRound > _currentSession!.totalRounds) {
       endGame();
       return;
     }
@@ -148,6 +162,12 @@ class GameProvider extends ChangeNotifier {
       round: nextRound,
     );
 
+    notifyListeners();
+  }
+
+  void setCurrentPlayerIndex(int index) {
+    if (_currentSession == null) return;
+    _currentSession = _currentSession!.copyWith(currentPlayerIndex: index);
     notifyListeners();
   }
 
@@ -183,7 +203,8 @@ class GameProvider extends ChangeNotifier {
 
     final isCorrect = _selectedAnswer == currentTriviaQuestion?.correctIndex;
     if (isCorrect) {
-      final bonusPoints = _timeRemaining > 10 ? 50 : (_timeRemaining > 5 ? 25 : 0);
+      final bonusPoints =
+          _timeRemaining > 10 ? 50 : (_timeRemaining > 5 ? 25 : 0);
       addScore(_currentSession!.currentPlayer.id, 100 + bonusPoints);
     }
     notifyListeners();
@@ -233,7 +254,8 @@ class GameProvider extends ChangeNotifier {
   }
 
   Player? getWinner() {
-    if (_currentSession == null || _currentSession!.players.isEmpty) return null;
+    if (_currentSession == null || _currentSession!.players.isEmpty)
+      return null;
 
     String? winnerId;
     int maxScore = -1;
@@ -267,6 +289,11 @@ class GameProvider extends ChangeNotifier {
     _answered = false;
     _nhiePlayerChoices = {};
     notifyListeners();
+  }
+
+  List<Player>? getPreviousPlayers() {
+    final players = _currentSession?.players;
+    return players;
   }
 
   bool get isGameOver => _currentSession?.status == GameStatus.finished;

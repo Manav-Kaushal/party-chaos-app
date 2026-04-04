@@ -443,7 +443,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
-            alignment: WrapAlignment.center,
+            alignment: WrapAlignment.start,
             children: List.generate(AvatarPresets.colors.length, (index) {
               final isSelected = _selectedColorIndex == index;
               return GestureDetector(

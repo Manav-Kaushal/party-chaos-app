@@ -670,6 +670,8 @@ class _GameCard extends StatelessWidget {
         return AppColors.primary;
       case GameType.quickFireTrivia:
         return AppColors.tertiary;
+      case GameType.oddOneOut:
+        return AppColors.primary;
     }
   }
 

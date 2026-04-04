@@ -19,6 +19,8 @@ class GamesScreen extends StatelessWidget {
         return AppColors.primary;
       case GameType.quickFireTrivia:
         return AppColors.tertiary;
+      case GameType.oddOneOut:
+        return AppColors.tertiary;
     }
   }
 
@@ -32,6 +34,8 @@ class GamesScreen extends StatelessWidget {
         return '🙈';
       case GameType.quickFireTrivia:
         return '🧠';
+      case GameType.oddOneOut:
+        return '🔍';
     }
   }
 

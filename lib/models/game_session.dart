@@ -1,8 +1,16 @@
 import 'package:equatable/equatable.dart';
 import 'player.dart';
 
-enum GameType { truthOrDare, wouldYouRather, neverHaveIEver, quickFireTrivia }
+enum GameType {
+  truthOrDare,
+  wouldYouRather,
+  neverHaveIEver,
+  quickFireTrivia,
+  oddOneOut
+}
+
 enum GameMode { local, online }
+
 enum GameStatus { waiting, playing, finished }
 
 class GameSession extends Equatable {
@@ -79,7 +87,9 @@ class GameSession extends Equatable {
       type: GameType.values.firstWhere((e) => e.name == json['type']),
       mode: GameMode.values.firstWhere((e) => e.name == json['mode']),
       status: GameStatus.values.firstWhere((e) => e.name == json['status']),
-      players: (json['players'] as List).map((p) => Player.fromJson(p as Map<String, dynamic>)).toList(),
+      players: (json['players'] as List)
+          .map((p) => Player.fromJson(p as Map<String, dynamic>))
+          .toList(),
       currentPlayerIndex: json['current_player_index'] as int? ?? 0,
       scores: Map<String, int>.from(json['scores'] ?? {}),
       round: json['round'] as int? ?? 1,
@@ -89,7 +99,18 @@ class GameSession extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, type, mode, status, players, currentPlayerIndex, scores, round, totalRounds, createdAt];
+  List<Object?> get props => [
+        id,
+        type,
+        mode,
+        status,
+        players,
+        currentPlayerIndex,
+        scores,
+        round,
+        totalRounds,
+        createdAt
+      ];
 }
 
 extension GameTypeExtension on GameType {
@@ -103,6 +124,8 @@ extension GameTypeExtension on GameType {
         return 'Never Have I Ever';
       case GameType.quickFireTrivia:
         return 'Quick Fire Trivia';
+      case GameType.oddOneOut:
+        return 'Odd One Out';
     }
   }
 
@@ -116,6 +139,8 @@ extension GameTypeExtension on GameType {
         return 'Share what you have or haven\'t done!';
       case GameType.quickFireTrivia:
         return 'Answer questions fast to win!';
+      case GameType.oddOneOut:
+        return 'Find the odd one or hide as the odd one!';
     }
   }
 
@@ -129,6 +154,8 @@ extension GameTypeExtension on GameType {
         return '🙈';
       case GameType.quickFireTrivia:
         return '🧠';
+      case GameType.oddOneOut:
+        return '🔍';
     }
   }
 }

@@ -253,6 +253,7 @@ class ProfileScreen extends StatelessWidget {
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.start,
               children: player.achievements.map((achievement) {
                 return Container(
                   padding: const EdgeInsets.symmetric(
@@ -497,6 +498,7 @@ class ProfileScreen extends StatelessWidget {
               Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.start,
                 children: List.generate(AvatarPresets.faces.length, (index) {
                   final isSelected = selectedFaceIndex == index;
                   return GestureDetector(
@@ -539,6 +541,7 @@ class ProfileScreen extends StatelessWidget {
               Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.start,
                 children: List.generate(AvatarPresets.colors.length, (index) {
                   final isSelected = selectedColorIndex == index;
                   return GestureDetector(
